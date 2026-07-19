@@ -26,12 +26,24 @@ Two independent, flag-toggleable features:
 Real names are preserved in the separate field the scoreboard reads, so **in-game is anonymous
 while your rankings/admin tools stay real-name.**
 
+### Localization
+The masked name is **not hardcoded** — it is resolved from `Config/Localization.csv` (key
+`wrtSpyAnonMask`, English + Japanese) and follows the **server's** language. An English server
+shows `Anonymous Survivor`; a Japanese server shows `名無しのサバイバー`. Add more language columns
+to the CSV, or set `Cfg.MaskOverride` in source to force a fixed string.
+
+> The masked name is a single value the server syncs to every client, so it follows the
+> **server** language — it is not shown per-viewer's client language (that would need a client
+> mod, which this modlet deliberately avoids). Set the CSV value empty to hide the name entirely.
+
 ### Install
 - Server-side only: drop the folder into the **server's** `Mods/`. No client action.
   ```
   <server>/Mods/8_WRT_14_SpyAnon/
     ├─ ModInfo.xml
-    └─ WrtSpyAnon.dll
+    ├─ WrtSpyAnon.dll
+    └─ Config/
+        └─ Localization.csv
   ```
 - Restart the server. `[WRT-Anon] loaded` in the log means it is active.
 - `SkipWithAntiCheat=true` — loads on EAC-enabled servers (kept because it is a Harmony DLL).
@@ -81,12 +93,23 @@ Put the resulting `WrtSpyAnon.dll` in this folder.
 
 実名はスコアボードが参照する別フィールドに残るため、**ゲーム内は匿名／集計・管理は実名**を両立します。
 
+### ローカライズ
+マスク表示名は**ハードコードではなく** `Config/Localization.csv`（キー `wrtSpyAnonMask`・英語/日本語）
+から解決し、**サーバーの言語**に追従します。英語サーバー=`Anonymous Survivor`／日本語サーバー=`名無しのサバイバー`。
+CSVに言語列を足せば拡張でき、ソースの `Cfg.MaskOverride` を非空にすれば固定文字列で上書きできます。
+
+> マスク名はサーバーが全クライアントへ同期する**単一値**のため、**サーバー言語**で決まります
+> （各視聴者のクライアント言語別には出し分けません＝それにはクライアントMODが必要で、本MODは
+> 意図的に避けています）。CSVの値を空にすると名前を完全非表示にできます。
+
 ### 導入
 - サーバーサイドのみ：サーバーの `Mods/` にフォルダごと配置。クライアント作業不要。
   ```
   <server>/Mods/8_WRT_14_SpyAnon/
     ├─ ModInfo.xml
-    └─ WrtSpyAnon.dll
+    ├─ WrtSpyAnon.dll
+    └─ Config/
+        └─ Localization.csv
   ```
 - サーバー再起動。ログに `[WRT-Anon] loaded` が出れば有効。
 - `SkipWithAntiCheat=true`。EAC有効サーバーでもロードされます（Harmony DLLのため維持）。

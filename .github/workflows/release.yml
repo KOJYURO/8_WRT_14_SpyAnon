@@ -11,6 +11,7 @@ on:
     paths:
       - 'ModInfo.xml'
       - 'WrtSpyAnon.dll'
+      - 'Config/**'
       - 'README.md'
   workflow_dispatch: {}
 
@@ -36,8 +37,9 @@ jobs:
           MOD="8_WRT_14_SpyAnon"
           STAGE="$RUNNER_TEMP/stage/$MOD"
           mkdir -p "$STAGE"
-          # 配布物のみコピー(ModInfo.xml + DLL + README + LICENSE)。ソース/.git/.github は含めない。
+          # 配布物のみコピー(ModInfo.xml + DLL + Config + README + LICENSE)。ソース/.git/.github は含めない。
           cp ModInfo.xml WrtSpyAnon.dll README.md LICENSE "$STAGE"/
+          cp -r Config "$STAGE"/
           ( cd "$RUNNER_TEMP/stage" && zip -r "$GITHUB_WORKSPACE/$MOD.zip" "$MOD" )
           echo "asset=$MOD.zip" >> "$GITHUB_OUTPUT"
 

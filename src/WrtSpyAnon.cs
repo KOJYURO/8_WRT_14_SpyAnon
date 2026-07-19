@@ -37,10 +37,33 @@ namespace WrtSpyAnon
 
     internal static class Cfg
     {
-        internal const bool ChatDisplayOnly = true;   // 通常チャットを表示専用に
-        internal const bool HideNames = true;         // 表示名を匿名化
-        internal const string Mask = "名無しのサバイバー"; // 匿名時の固定表示名(空文字にすれば完全非表示)
-        internal const string CmdPrefix = "/";        // コマンド前置詞(通す)
+        internal static readonly bool ChatDisplayOnly = true; // 通常チャットを表示専用に
+        internal static readonly bool HideNames = true;       // 表示名を匿名化
+        internal const string CmdPrefix = "/";                // コマンド前置詞(通す)
+
+        // 匿名時の表示名。Config/Localization.csv の "wrtSpyAnonMask"(EN/JP)で解決し
+        // サーバー言語に追従する(英語サーバー=Anonymous Survivor / 日本語=名無しのサバイバー)。
+        // ★同期される単一値なので、各クライアントの言語別ではなくサーバー言語で決まる。
+        internal const string MaskKey = "wrtSpyAnonMask";
+        internal static readonly string MaskOverride = "";        // 非空にすると CSV より優先(固定文字列)。完全非表示は CSV 値を空に
+        internal const string MaskFallback = "名無しのサバイバー"; // Localization 未ロード/キー欠落時の保険
+
+        [ThreadStatic] private static string _maskCache;
+        internal static string Mask
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(MaskOverride)) return MaskOverride;
+                if (_maskCache != null) return _maskCache;
+                try
+                {
+                    string s = Localization.Get(MaskKey, false, null);
+                    if (!string.IsNullOrEmpty(s) && s != MaskKey) { _maskCache = s; return s; }
+                }
+                catch { /* localization 未初期化などは fallback */ }
+                return MaskFallback; // 成功するまでキャッシュしない(後で言語ロード後に再解決)
+            }
+        }
     }
 
     // ネット送信中のみ true にする(ディスク保存経路と区別)。ThreadStatic=送信スレッド局所。
@@ -104,7 +127,10 @@ namespace WrtSpyAnon
         static void Prefix(ref AuthoredText _instance)
         {
             if (Cfg.HideNames && NetMask.Active)
-                _instance = string.IsNullOrEmpty(Cfg.Mask) ? new AuthoredText() : new AuthoredText(Cfg.Mask, null);
+            {
+                string m = Cfg.Mask;
+                _instance = string.IsNullOrEmpty(m) ? new AuthoredText() : new AuthoredText(m, null);
+            }
         }
     }
 }

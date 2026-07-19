@@ -4,7 +4,7 @@
 	<DisplayName value="WRT 匿名化 + 表示専用チャット"/>
 	<Description value="WRT SpyAnon - server-side anonymization for the Spy vs Spy server. Masks the in-game display name (floating nameplates, owner labels, chat sender) for all players while keeping the real name for the Scoreboard/WP ranking (separate ClientInfo.playerName field). Also makes text chat display-only: player-typed messages are not relayed to other clients (slash commands still pass), while server/bot/system messages still show. Server-side only, self-contained, toggleable via flags. ／ 2F(Spy vs Spy鯖)向けサーバーサイド匿名化。頭上ネームプレート/所有者ラベル/送信者名などゲーム内表示名を全員に対しマスク(ScoreboardとWPランキングは別フィールドで実名維持)。テキストチャットは表示専用化=プレイヤーの通常発言は他クライアントへ中継せず(コマンドは通す)、サーバー/bot発言のみ表示。サーバーサイドのみ・単独MODletで着脱可。"/>
 	<Author value="7DAYSTODIE.JP"/>
-	<Version value="1.0.0"/>
+	<Version value="1.1.0"/>
 	<Website value="https://7daystodie.jp"/>
 	<SkipWithAntiCheat value="true"/>
 </xml>
