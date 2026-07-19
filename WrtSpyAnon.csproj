@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>WrtSpyAnon</AssemblyName>
+    <LangVersion>9</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DebugType>none</DebugType>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <!-- build: dotnet build -c Release -p:ManagedDir=/home/steam/7dtd/7DaysToDieServer_Data/Managed -p:HarmonyDir=/home/steam/7dtd/Mods/0_TFP_Harmony -->
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src/WrtSpyAnon.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="netstandard"><HintPath>$(ManagedDir)/netstandard.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="mscorlib"><HintPath>$(ManagedDir)/mscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System"><HintPath>$(ManagedDir)/System.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.Core"><HintPath>$(ManagedDir)/System.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedDir)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp-firstpass"><HintPath>$(ManagedDir)/Assembly-CSharp-firstpass.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="LogLibrary"><HintPath>$(ManagedDir)/LogLibrary.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(HarmonyDir)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

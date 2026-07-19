@@ -1,0 +1,13 @@
+# build artifacts
+obj/
+bin/
+
+# editor / os
+.vs/
+.vscode/
+.idea/
+.DS_Store
+*.user
+*.bak
+
+# NOTE: WrtSpyAnon.dll is intentionally committed (prebuilt drop-in for players).
