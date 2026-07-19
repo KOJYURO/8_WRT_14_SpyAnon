@@ -49,6 +49,7 @@ namespace WrtSpyAnon
         internal const string MaskFallback = "名無しのサバイバー"; // Localization 未ロード/キー欠落時の保険
 
         [ThreadStatic] private static string _maskCache;
+        private static bool _logged;
         internal static string Mask
         {
             get
@@ -58,7 +59,12 @@ namespace WrtSpyAnon
                 try
                 {
                     string s = Localization.Get(MaskKey, false, null);
-                    if (!string.IsNullOrEmpty(s) && s != MaskKey) { _maskCache = s; return s; }
+                    if (!string.IsNullOrEmpty(s) && s != MaskKey)
+                    {
+                        _maskCache = s;
+                        if (!_logged) { _logged = true; Log.Out("[WRT-Anon] mask resolved from Localization '" + MaskKey + "' = " + s); }
+                        return s;
+                    }
                 }
                 catch { /* localization 未初期化などは fallback */ }
                 return MaskFallback; // 成功するまでキャッシュしない(後で言語ロード後に再解決)
