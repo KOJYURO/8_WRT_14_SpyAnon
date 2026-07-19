@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.dll binary
+*.png binary
+*.jpg binary
+*.unity3d binary
+*.pyc binary
+*.ogg binary

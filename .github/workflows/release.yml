@@ -1,0 +1,56 @@
+name: Release mod zip
+
+# ModInfo.xml / WrtSpyAnon.dll / README.md を更新して push するだけで、
+# 配布zipを自動生成し Release を更新します。手動zipは不要。
+# ダウンロード用固定URL:
+#   https://github.com/KOJYURO/8_WRT_14_SpyAnon/releases/latest/download/8_WRT_14_SpyAnon.zip
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'ModInfo.xml'
+      - 'WrtSpyAnon.dll'
+      - 'README.md'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from ModInfo.xml
+        id: ver
+        run: |
+          V=$(grep -oP '<Version value="\K[^"]+' ModInfo.xml)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "ModInfo version: $V"
+
+      - name: Build distribution zip
+        id: zip
+        run: |
+          MOD="8_WRT_14_SpyAnon"
+          STAGE="$RUNNER_TEMP/stage/$MOD"
+          mkdir -p "$STAGE"
+          # 配布物のみコピー(ModInfo.xml + DLL + README + LICENSE)。ソース/.git/.github は含めない。
+          cp ModInfo.xml WrtSpyAnon.dll README.md LICENSE "$STAGE"/
+          ( cd "$RUNNER_TEMP/stage" && zip -r "$GITHUB_WORKSPACE/$MOD.zip" "$MOD" )
+          echo "asset=$MOD.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.ver.outputs.version }}"
+          ASSET="${{ steps.zip.outputs.asset }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" --clobber
+          else
+            gh release create "$TAG" "$ASSET" \
+              --title "$TAG" \
+              --notes "自動生成された配布パッケージ。サーバーの Mods/ フォルダへ解凍してください(サーバーサイドのみ・クライアント導入不要)。"
+          fi

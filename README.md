@@ -1,81 +1,63 @@
-# WRT SpyAnon — 匿名化 + 表示専用チャット (7 Days to Die server-side modlet)
+# WRT SpyAnon
 
-**Server-side anonymization for 7 Days to Die.** Masks the in-game display name (floating
-nameplates, owner labels, chat sender) for **all** players, and optionally turns text chat into
-a display-only feed. Built for a "Spy vs Spy" style server where everyone should look anonymous
-in-game while the operator keeps real names for scoreboards / rankings.
+A **server-side** modlet that masks every player's in-game display name (floating nameplates,
+owner labels, chat sender) and can turn text chat into a display-only feed. Built for a
+"Spy vs Spy" style server where everyone looks anonymous in-game while the operator keeps real
+names for scoreboards / rankings. Clients stay vanilla (no client download, no XUi).
 
-サーバーサイドの匿名化MODletです。頭上ネームプレート・所有者ラベル・チャット送信者名など、
-**ゲーム内の表示名を全プレイヤーに対してマスク**します。さらにテキストチャットを「表示専用」化
-（プレイヤーの通常発言を他クライアントへ中継しない）できます。実名はスコアボード等が参照する
-別フィールドに残るため、**ゲーム内は匿名／集計は実名**を両立できます。
-
-> Server-side only. Self-contained single modlet. No client install required.
-> サーバーサイドのみ・単独MODlet・クライアント導入不要。
+> ### Download
+> Drop-in package (`ModInfo.xml` + `WrtSpyAnon.dll`):
+> **https://github.com/KOJYURO/8_WRT_14_SpyAnon/releases/latest/download/8_WRT_14_SpyAnon.zip**
 
 ---
 
-## What it does / できること
+## English
 
-| 機能 | 説明 |
-|---|---|
-| **① 表示名の匿名化 (`HideNames`)** | 全プレイヤーの表示名を固定文字列（既定 `名無しのサバイバー`）に差し替え。頭上ネームプレート、ESCのプレイヤー一覧、参加/退出メッセージ、チャット送信者名すべてに適用。 |
-| **② 表示専用チャット (`ChatDisplayOnly`)** | プレイヤーの通常発言を他クライアントへ中継しない（＝チャットが読めるが会話にならない演出）。`/` で始まるコマンドは通し、サーバー/botの発言は従来どおり表示。 |
+### Overview
+Two independent, flag-toggleable features:
 
-### 名前が漏れない仕組み / How masking is complete
+- **Display-name anonymization** — every player's shown name is replaced with a fixed string
+  (default `名無しのサバイバー`) on floating nameplates, the ESC player list, join/leave messages,
+  and chat sender labels.
+- **Display-only chat** — a player's normal messages are not relayed to other clients (chat
+  becomes readable-but-not-conversational). `/`-prefixed commands still pass, and server/bot
+  messages still show.
 
-7DTDでプレイヤー名が「見える」経路は2系統あり、両方を塞いでいます：
+Real names are preserved in the separate field the scoreboard reads, so **in-game is anonymous
+while your rankings/admin tools stay real-name.**
 
-- **(A) サーバー生成テキスト** — 参加/退出やチャット送信者名はサーバーが `PersistentPlayerName.get_DisplayName`
-  で組み立てる → Postfix で固定名に差し替え。
-- **(B) クライアント描画** — 頭上ネームプレート/一覧は「サーバーから同期された名前データ」を各クライアントが
-  描画する。名前は `AuthoredText.ToStream` でシリアライズされるが、これは**ディスク保存でも共通**のため、
-  **ネット送信パッケージの `write()` 実行中だけ立つ `ThreadStatic` フラグ**でゲートしてネット送信名のみ空/固定化。
-  ディスク保存経路は一切触らない＝**セーブ名は実名のまま破損ゼロ**。
+### Install
+- Server-side only: drop the folder into the **server's** `Mods/`. No client action.
+  ```
+  <server>/Mods/8_WRT_14_SpyAnon/
+    ├─ ModInfo.xml
+    └─ WrtSpyAnon.dll
+  ```
+- Restart the server. `[WRT-Anon] loaded` in the log means it is active.
+- `SkipWithAntiCheat=true` — loads on EAC-enabled servers (kept because it is a Harmony DLL).
 
-> ⚠️ ボイスチャット（EOS RTC）はサーバー側で名前を差し替えられません。本MODはテキスト表示名のみ対象です。
-> Voice chat (EOS RTC) identities are not maskable server-side; this modlet covers text/display names only.
+### How it works
+Player names surface through two paths; both are closed:
 
----
+- **(A) Server-generated text** (join/leave, chat sender) is built via
+  `PersistentPlayerName.get_DisplayName` → Harmony **Postfix** swaps in the fixed name.
+- **(B) Client-rendered data** (nameplates, ESC list) is drawn from name data the server
+  syncs. Names serialize through `AuthoredText.ToStream`, which is **shared with disk saves** —
+  so masking is gated by a `ThreadStatic` flag set only during the net-send packages'
+  `write()` (`NetPackageWorldInfo` / `NetPackagePersistentPlayerState`). The disk-save path is
+  never touched → **saved names stay real, zero corruption.**
 
-## Install / 導入
+### Compatibility & notes
+- Server-side only, self-contained, no dependency on other mods; each feature toggles off via
+  `Cfg` flags in source.
+- Voice chat (EOS RTC) identities are **not** maskable server-side — this modlet covers
+  text/display names only.
+- Config lives as `Cfg` constants in `src/WrtSpyAnon.cs`; edit and rebuild to change
+  (see **Build**).
 
-1. サーバーの `Mods/` フォルダにこのフォルダごと配置：
-   ```
-   <server>/Mods/8_WRT_14_SpyAnon/
-     ├─ ModInfo.xml
-     └─ WrtSpyAnon.dll
-   ```
-2. サーバーを再起動。ログに `[WRT-Anon] loaded` が出れば有効。
-3. `ModInfo.xml` は `SkipWithAntiCheat=true`。EAC有効サーバーでもロードされます（Harmony DLL のため EAC 環境で読み込ませたい場合はこの設定を維持）。
-
-> DLL のみ配布でも動きます。`ModInfo.xml` + `WrtSpyAnon.dll` の2ファイルが必須です。
-
----
-
-## Configuration / 設定
-
-設定は現状 **ソース内の定数** (`Cfg`) です。変更するには編集して再ビルドしてください（[Build](#build--ビルド) 参照）。
-
-```csharp
-internal static class Cfg
-{
-    internal const bool   ChatDisplayOnly = true;   // 通常チャットを表示専用に
-    internal const bool   HideNames       = true;   // 表示名を匿名化
-    internal const string Mask            = "名無しのサバイバー"; // 匿名時の固定表示名(空文字で完全非表示)
-    internal const string CmdPrefix       = "/";    // 通すコマンド前置詞
-}
-```
-
-- 匿名化だけ欲しい → `ChatDisplayOnly = false`。
-- チャット制御だけ欲しい → `HideNames = false`。
-- 完全非表示（名前欄を空に） → `Mask = ""`。
-
----
-
-## Build / ビルド
-
-`netstandard2.0` / C# 9。ゲーム同梱のManaged DLL群とTFP Harmonyを参照します（**再配布不可のゲームDLLはこのリポジトリに含みません**）。
+### Build
+`netstandard2.0` / C# 9. References the game's Managed DLLs and TFP Harmony (the
+non-redistributable game DLLs are **not** included in this repo).
 
 ```bash
 dotnet build -c Release \
@@ -83,20 +65,46 @@ dotnet build -c Release \
   -p:HarmonyDir=/path/to/Mods/0_TFP_Harmony
 ```
 
-出力 `WrtSpyAnon.dll` をこのフォルダに置けばOK。
-
-### 依存参照 / References
-- `Assembly-CSharp.dll`, `Assembly-CSharp-firstpass.dll`, `mscorlib.dll`, `netstandard.dll`,
-  `System*.dll`, `LogLibrary.dll` … ゲームの `Managed/` から
-- `0Harmony.dll` … `Mods/0_TFP_Harmony/`
+Put the resulting `WrtSpyAnon.dll` in this folder.
 
 ---
 
-## Compatibility / 互換性
+## 日本語
 
-- **Server-side only** — クライアント改変なし・EACと非干渉（`SkipWithAntiCheat`）。
-- 単独で自己完結。他MOD非依存。フラグで各機能を即無効化可能。
-- 7 Days to Die の Harmony 対応版（TFP Harmony 同梱ビルド）を想定。
+### 概要
+独立した2機能（各フラグで着脱可）：
+
+- **表示名の匿名化** — 全プレイヤーの表示名を固定文字列（既定 `名無しのサバイバー`）に差し替え。
+  頭上ネームプレート・ESCのプレイヤー一覧・参加/退出メッセージ・チャット送信者名すべてに適用。
+- **表示専用チャット** — プレイヤーの通常発言を他クライアントへ中継しない（読めるが会話にならない演出）。
+  `/` で始まるコマンドは通し、サーバー/botの発言は従来どおり表示。
+
+実名はスコアボードが参照する別フィールドに残るため、**ゲーム内は匿名／集計・管理は実名**を両立します。
+
+### 導入
+- サーバーサイドのみ：サーバーの `Mods/` にフォルダごと配置。クライアント作業不要。
+  ```
+  <server>/Mods/8_WRT_14_SpyAnon/
+    ├─ ModInfo.xml
+    └─ WrtSpyAnon.dll
+  ```
+- サーバー再起動。ログに `[WRT-Anon] loaded` が出れば有効。
+- `SkipWithAntiCheat=true`。EAC有効サーバーでもロードされます（Harmony DLLのため維持）。
+
+### 仕組み
+名前が「見える」経路は2系統あり、両方を塞いでいます：
+
+- **(A) サーバー生成テキスト**（参加/退出・チャット送信者名）は `PersistentPlayerName.get_DisplayName`
+  で組み立て → Harmony **Postfix** で固定名に差し替え。
+- **(B) クライアント描画データ**（ネームプレート・一覧）は、サーバーが同期する名前データを各クライアントが
+  描画する。名前は `AuthoredText.ToStream` でシリアライズされるが、これは**ディスク保存と共通**のため、
+  ネット送信パッケージ（`NetPackageWorldInfo` / `NetPackagePersistentPlayerState`）の `write()` 実行中だけ立つ
+  `ThreadStatic` フラグでゲート。ディスク保存経路は一切触らない＝**セーブ名は実名のまま破損ゼロ**。
+
+### 互換性と補足
+- サーバーサイドのみ・単独で自己完結・他MOD非依存。各機能はソース内 `Cfg` フラグで即無効化可能。
+- ボイスチャット（EOS RTC）の名前はサーバー側で差し替え不可＝本MODはテキスト/表示名のみ対象。
+- 設定は `src/WrtSpyAnon.cs` の `Cfg` 定数。変更は編集して再ビルド（**Build** 参照）。
 
 ---
 
